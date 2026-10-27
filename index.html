@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LucidProducer · the agentic DAW</title>
+  <meta name="description" content="LucidProducer is a digital audio workstation written from scratch in Rust that people and AI agents drive with the same tools.">
+  <meta property="og:title" content="LucidProducer · the agentic DAW">
+  <meta property="og:description" content="A from-scratch DAW in pure Rust that people and AI agents drive with the same tools.">
+  <meta property="og:image" content="img/demo-techno-arrange.jpg">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <style>
+    :root {
+      --bg: #141516;
+      --bg-raised: #1c1e20;
+      --bg-card: #212427;
+      --line: #2e3236;
+      --text: #e6e8ea;
+      --text-dim: #a2a8ae;
+      --accent: #3fd8dc;
+      --accent-dim: rgba(63, 216, 220, 0.14);
+      --radius: 10px;
+      --max: 1120px;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { font-family: var(--mono); font-size: 0.88em; background: var(--bg-card); padding: 0.1em 0.35em; border-radius: 4px; }
+    img { max-width: 100%; display: block; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
+
+    nav { position: sticky; top: 0; z-index: 10; background: rgba(20, 21, 22, 0.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; gap: 16px; }
+    nav .brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 600; letter-spacing: 0.02em; }
+    nav .brand img { width: 28px; height: 28px; }
+    nav ul { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; font-size: 15px; }
+    nav ul a { color: var(--text-dim); }
+    nav ul a:hover { color: var(--text); text-decoration: none; }
+
+    header.hero { padding: 64px 0 40px; text-align: center; background: radial-gradient(ellipse at 50% 0%, rgba(63, 216, 220, 0.12), transparent 60%); }
+    .hero .logo { width: min(340px, 72vw); margin: 0 auto 8px; }
+    .hero h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.15; margin: 16px 0 14px; letter-spacing: -0.01em; }
+    .hero h1 span { color: var(--accent); }
+    .hero p.lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--text-dim); max-width: 760px; margin: 0 auto; }
+    .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; }
+    .badges li { font-size: 13px; border: 1px solid var(--line); background: var(--bg-raised); color: var(--text-dim); padding: 4px 12px; border-radius: 999px; }
+    .badges li.status { border-color: rgba(214, 158, 46, 0.5); color: #e6b34e; }
+    .hero-shot { margin: 44px auto 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); }
+
+    section { padding: 72px 0; border-top: 1px solid var(--line); }
+    section h2 { font-size: clamp(24px, 3.4vw, 32px); margin: 0 0 10px; letter-spacing: -0.01em; }
+    section p.intro { color: var(--text-dim); max-width: 760px; margin: 0 0 36px; }
+
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+    .card { background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: var(--text-dim); font-size: 15.5px; }
+    .card .tag { display: inline-block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 8px; }
+
+    .split { display: grid; gap: 40px; grid-template-columns: 1fr 1fr; align-items: center; }
+    .split > * { min-width: 0; }
+    pre.term { margin: 0; background: #0d0e0f; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; overflow-x: auto; font: 13.5px/1.7 var(--mono); color: #cfd4d8; }
+    pre.term .c { color: #6b737a; }
+    pre.term .p { color: var(--accent); }
+    ul.checks { list-style: none; padding: 0; margin: 0; }
+    ul.checks li { padding-left: 26px; position: relative; margin: 0 0 12px; color: var(--text-dim); }
+    ul.checks li strong { color: var(--text); }
+    ul.checks li::before { content: ""; position: absolute; left: 4px; top: 0.6em; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+    .gallery { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); }
+    figure { margin: 0; background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    figure img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left; cursor: zoom-in; }
+    figcaption { padding: 12px 16px; font-size: 14.5px; color: var(--text-dim); }
+
+    .plugins { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+    .plugins li { font-size: 13.5px; padding: 3px 10px; border-radius: 6px; background: var(--bg-card); color: var(--text-dim); border: 1px solid var(--line); }
+    .plugins li.inst { color: var(--accent); background: var(--accent-dim); border-color: transparent; }
+
+    .notice { background: var(--bg-raised); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 24px 26px; }
+    .notice h3 { margin: 0 0 6px; }
+    .notice p { margin: 0; color: var(--text-dim); }
+
+    footer { border-top: 1px solid var(--line); padding: 40px 0 56px; color: var(--text-dim); font-size: 15px; }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; align-items: center; }
+    footer .author { display: flex; align-items: center; gap: 12px; }
+    footer .li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-raised); color: var(--text); }
+    footer .li:hover { border-color: var(--accent); text-decoration: none; }
+    footer .li svg { width: 18px; height: 18px; fill: #0a66c2; background: #fff; border-radius: 3px; }
+    footer small { display: block; width: 100%; font-size: 13px; color: #7a8187; }
+
+    dialog { padding: 0; border: none; background: transparent; max-width: 96vw; max-height: 94vh; }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.85); }
+    dialog img { max-height: 92vh; width: auto; border-radius: 8px; cursor: zoom-out; }
+
+    @media (max-width: 820px) {
+      .split { grid-template-columns: 1fr; }
+      nav ul { display: none; }
+      .gallery { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      section { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/favicon.png" alt="">LucidProducer</a>
+    <ul>
+      <li><a href="#agents">For agents</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#screenshots">Screenshots</a></li>
+      <li><a href="#essentials">Lucid Essentials</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <img class="logo" src="img/logo.png" alt="LucidProducer logo">
+    <h1>The <span>agentic</span> DAW</h1>
+    <p class="lead">
+      A digital audio workstation written from scratch in Rust, in the tradition of DAWs like
+      Logic Pro, Ableton Live, Cubase, Reaper and Bitwig. People and AI agents drive it with
+      the same tools.
+    </p>
+    <ul class="badges">
+      <li>100% Rust</li>
+      <li>Native desktop app</li>
+      <li>macOS · Apple Silicon</li>
+      <li>CLI + MCP server</li>
+      <li class="status">Pre-release · 1.1.0-rc5</li>
+    </ul>
+    <div class="hero-shot">
+      <img src="img/demo-techno-arrange.jpg" alt="LucidProducer's arrange window with the Techno demo song: drums, an acid line and stabs, with the drum kit's controls in the inspector" width="1600" height="1000">
+    </div>
+  </div>
+</header>
+
+<section id="agents">
+  <div class="wrap split">
+    <div>
+      <h2>Built so an agent can make music with it</h2>
+      <p class="intro" style="margin-bottom:24px">
+        An AI agent such as Claude can produce a track in LucidProducer as fully as a person at
+        the keyboard can, and check its own work along the way.
+      </p>
+      <ul class="checks">
+        <li><strong>Every edit is a command.</strong> One serializable command layer with 83
+          operations is shared by the GUI, undo/redo, the CLI and the agent interfaces. Anything
+          you can click, an agent can do, and you can undo it.</li>
+        <li><strong>MCP server built in.</strong> Claude Code and other MCP clients read and edit
+          projects, render and analyze audio, and take snapshots of the arrange view, mixer or
+          piano roll.</li>
+        <li><strong>Live control.</strong> Over a local socket, an agent edits the session you
+          have open and sees the transport and meters.</li>
+        <li><strong>Write, render, analyze, assert.</strong> Offline rendering and analysis (peak,
+          RMS, loudness, spectrum, onsets) let an agent verify what it made.</li>
+        <li><strong>Scripting.</strong> Sandboxed Rhai scripts edit a project, and each run is one
+          undo step.</li>
+      </ul>
+    </div>
+    <pre class="term"><span class="c"># a project from the command line</span>
+<span class="p">$</span> lucidproducer-cli new song.lucidproj --demo
+
+<span class="c"># apply edits as JSON commands</span>
+<span class="p">$</span> echo '[{"op":"add_track","name":"Bass","instrument":"Lucid Synth"}]' \
+    | lucidproducer-cli apply song.lucidproj -
+
+<span class="c"># render offline and get a JSON report</span>
+<span class="p">$</span> lucidproducer-cli render song.lucidproj -o song.wav
+
+<span class="c"># or hand the whole thing to Claude Code</span>
+<span class="p">$</span> claude mcp add lucidproducer -- lucidproducer-mcp</pre>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>A complete DAW for people, too</h2>
+    <p class="intro">
+      A dark arrange window with tracks and regions, a piano roll that opens with a double-click,
+      a channel strip per track and a control bar with transport, tempo, cycle and metronome.
+      The audio engine is real-time safe and can also render a whole project offline.
+    </p>
+    <div class="grid">
+      <div class="card"><span class="tag">Arrange</span><h3>Tracks and regions</h3>
+        <p>Drag, move, resize and split regions with snapping, zoom and cycle. Aliases, track
+          cloning, a tempo track and markers.</p></div>
+      <div class="card"><span class="tag">MIDI</span><h3>Piano roll and more</h3>
+        <p>Quantize, chord recognition, Musical Typing, MIDI recording and file import/export,
+          plus Feel, a per-track humanizer with presets.</p></div>
+      <div class="card"><span class="tag">Beats</span><h3>Step sequencer and Drummer</h3>
+        <p>Pattern regions with one row of steps per drum sound, and drummer regions whose groove
+          is generated for you.</p></div>
+      <div class="card"><span class="tag">Audio</span><h3>Recording and import</h3>
+        <p>Audio tracks and recording, import of WAV, AIFF, FLAC, MP3, Ogg Vorbis and M4A, region
+          gain and fades, Normalize, Reverse and Bake Effects into Audio.</p></div>
+      <div class="card"><span class="tag">Mixer</span><h3>Buses, sends, automation</h3>
+        <p>Volume, pan, mute, solo and meters, buses and sends, and per-parameter automation with
+          Read, Touch, Latch and Write modes.</p></div>
+      <div class="card"><span class="tag">Plugins</span><h3>AU, VST3 and CLAP</h3>
+        <p>Hosts Audio Units, VST3 and CLAP plugins on macOS, with editors in floating windows or
+          as tiles.</p></div>
+      <div class="card"><span class="tag">Layout</span><h3>Tiled window</h3>
+        <p>Several piano rolls, step editors and plugin editors side by side, rearranged by mouse
+          or keyboard and saved per project or as templates.</p></div>
+      <div class="card"><span class="tag">Workflow</span><h3>Export and safety nets</h3>
+        <p>Background bounce to WAV or AIFF with loudness normalization, configurable key
+          commands, autosave and crash recovery.</p></div>
+      <div class="card"><span class="tag">Demos</span><h3>Four demo songs</h3>
+        <p>Pop, a classical nocturne in 3/4, rock with a Drummer groove, and techno with an acid
+          line and a filter sweep, all from factory sounds.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screenshots">
+  <div class="wrap">
+    <h2>Screenshots</h2>
+    <p class="intro">From the demo songs and the app's own snapshot tests. Click an image to enlarge it.</p>
+    <div class="gallery">
+      <figure><img src="img/demo-rock-mixer.jpg" alt="The mixer with the Rock demo song" loading="lazy"><figcaption>The mixer, with the Rock demo song.</figcaption></figure>
+      <figure><img src="img/demo-classical-piano-roll.jpg" alt="The piano roll with the Classical demo song" loading="lazy"><figcaption>The piano roll, with the Classical demo song.</figcaption></figure>
+      <figure><img src="img/step-sequencer-drummer.jpg" alt="The step sequencer showing a Drummer groove" loading="lazy"><figcaption>The step sequencer with a Drummer groove.</figcaption></figure>
+      <figure><img src="img/window-tiled-two-piano-rolls.jpg" alt="The tiled window with two piano rolls open" loading="lazy"><figcaption>The tiled window: two piano rolls side by side.</figcaption></figure>
+      <figure><img src="img/plugins-browser.jpg" alt="The plugin browser" loading="lazy"><figcaption>The plugin browser: AU, VST3 and CLAP.</figcaption></figure>
+      <figure><img src="img/demo-techno-arrange.jpg" alt="The arrange window with the Techno demo song" loading="lazy"><figcaption>The arrange window, with the Techno demo song.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="essentials">
+  <div class="wrap">
+    <h2>Lucid Essentials</h2>
+    <p class="intro">
+      LucidProducer's instruments and effects come from Lucid Essentials, a companion suite of
+      39 VST3 and Audio Unit plugins with the same look. They also run in any other DAW.
+    </p>
+    <ul class="plugins">
+      <li class="inst">Synth</li><li class="inst">Drums</li><li class="inst">Sampler</li><li class="inst">Sample Kit</li><li class="inst">Granular</li><li class="inst">Bagpipes</li><li class="inst">Bow</li><li class="inst">Brass</li><li class="inst">Hurdy-Gurdy</li><li class="inst">Pipe Organ</li><li class="inst">Pluck</li><li class="inst">Reed</li>
+      <li>EQ</li><li>Compressor</li><li>Limiter</li><li>Gate</li><li>De-esser</li><li>Multiband</li><li>Delay</li><li>Reverb</li><li>IR Reverb</li><li>Chorus</li><li>Flanger</li><li>Phaser</li><li>Tremolo</li><li>Distortion</li><li>Overdrive</li><li>Saturation</li><li>Cabinet</li><li>Lowpass</li><li>Highpass</li><li>Bandpass</li><li>Gain</li><li>Utility</li><li>Spectrum</li><li>Spectrogram</li><li>Loudness</li><li>Pitch</li><li>Stereo Scope</li>
+    </ul>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="notice">
+      <h3>Not available for download yet</h3>
+      <p>
+        LucidProducer is in pre-release testing on macOS (Apple Silicon). Public builds will
+        follow. It is a clean-room project and shares no code with any other DAW.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="author">Made by Dr. Tristan Behrens</div>
+    <a class="li" href="https://www.linkedin.com/in/dr-tristan-behrens-734967a2/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+      Connect on LinkedIn
+    </a>
+    <small>Logic Pro, Ableton Live, Cubase, Reaper and Bitwig are trademarks of their respective owners.</small>
+  </div>
+</footer>
+
+<dialog id="zoom"><img alt=""></dialog>
+<script>
+  const zoom = document.getElementById("zoom");
+  const zoomImg = zoom.querySelector("img");
+  document.querySelectorAll(".gallery img, .hero-shot img").forEach((img) => {
+    img.addEventListener("click", () => {
+      zoomImg.src = img.src;
+      zoomImg.alt = img.alt;
+      zoom.showModal();
+    });
+  });
+  zoom.addEventListener("click", () => zoom.close());
+</script>
+</body>
+</html>
