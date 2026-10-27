@@ -35,7 +35,7 @@
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
     code { font-family: var(--mono); font-size: 0.88em; background: var(--bg-card); padding: 0.1em 0.35em; border-radius: 4px; }
-    img { max-width: 100%; display: block; }
+    img { max-width: 100%; height: auto; display: block; }
     .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
 
     nav { position: sticky; top: 0; z-index: 10; background: rgba(20, 21, 22, 0.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
@@ -78,7 +78,7 @@
 
     .gallery { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); }
     figure { margin: 0; background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-    figure img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left; cursor: zoom-in; }
+    figure img { width: 100%; cursor: zoom-in; }
     figcaption { padding: 12px 16px; font-size: 14.5px; color: var(--text-dim); }
 
     .plugins { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
